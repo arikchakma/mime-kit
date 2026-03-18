@@ -1,6 +1,7 @@
 import PostalMime from 'postal-mime';
 import type { Address as PostalMimeAddress } from 'postal-mime';
 
+import { MimeKitError } from './error.ts';
 import { Headers } from './headers.ts';
 
 export type Address = { name: string; address: string };
@@ -86,50 +87,54 @@ function parseDate(raw: string | undefined): Date | undefined {
 export async function parse(
   input: string | ArrayBuffer | Uint8Array
 ): Promise<Email> {
-  const result = await PostalMime.parse(input, {
-    attachmentEncoding: 'arraybuffer',
-  });
+  try {
+    const result = await PostalMime.parse(input, {
+      attachmentEncoding: 'arraybuffer',
+    });
 
-  const attachments: ParsedAttachment[] = (result.attachments ?? []).map(
-    (a) => {
-      const content =
-        a.content instanceof Uint8Array
-          ? a.content
-          : typeof a.content === 'string'
-            ? new TextEncoder().encode(a.content)
-            : new Uint8Array(a.content);
+    const attachments: ParsedAttachment[] = (result.attachments ?? []).map(
+      (a) => {
+        const content =
+          a.content instanceof Uint8Array
+            ? a.content
+            : typeof a.content === 'string'
+              ? new TextEncoder().encode(a.content)
+              : new Uint8Array(a.content);
 
-      return {
-        filename: a.filename ?? undefined,
-        mimeType: a.mimeType,
-        disposition: a.disposition === 'inline' ? 'inline' : 'attachment',
-        content,
-        ...(a.contentId ? { contentId: a.contentId } : {}),
-        ...(a.related ? { related: a.related } : {}),
-        ...(a.description ? { description: a.description } : {}),
-        ...(a.method ? { method: a.method } : {}),
-        text() {
-          return new TextDecoder().decode(this.content);
-        },
-      };
-    }
-  );
+        return {
+          filename: a.filename ?? undefined,
+          mimeType: a.mimeType,
+          disposition: a.disposition === 'inline' ? 'inline' : 'attachment',
+          content,
+          ...(a.contentId ? { contentId: a.contentId } : {}),
+          ...(a.related ? { related: a.related } : {}),
+          ...(a.description ? { description: a.description } : {}),
+          ...(a.method ? { method: a.method } : {}),
+          text() {
+            return new TextDecoder().decode(this.content);
+          },
+        };
+      }
+    );
 
-  return {
-    from: normalizeOne(result.from),
-    sender: normalizeOne(result.sender),
-    to: flattenAddresses(result.to),
-    cc: flattenAddresses(result.cc),
-    bcc: flattenAddresses(result.bcc),
-    replyTo: flattenAddresses(result.replyTo),
-    subject: result.subject ?? '',
-    messageId: result.messageId?.replace(/^<|>$/g, '') ?? undefined,
-    inReplyTo: result.inReplyTo ?? undefined,
-    references: parseReferences(result.references),
-    date: parseDate(result.date),
-    text: result.text ?? undefined,
-    html: result.html ?? undefined,
-    headers: new Headers(result.headers),
-    attachments,
-  };
+    return {
+      from: normalizeOne(result.from),
+      sender: normalizeOne(result.sender),
+      to: flattenAddresses(result.to),
+      cc: flattenAddresses(result.cc),
+      bcc: flattenAddresses(result.bcc),
+      replyTo: flattenAddresses(result.replyTo),
+      subject: result.subject ?? '',
+      messageId: result.messageId?.replace(/^<|>$/g, '') ?? undefined,
+      inReplyTo: result.inReplyTo ?? undefined,
+      references: parseReferences(result.references),
+      date: parseDate(result.date),
+      text: result.text ?? undefined,
+      html: result.html ?? undefined,
+      headers: new Headers(result.headers),
+      attachments,
+    };
+  } catch (err) {
+    throw MimeKitError.fromParseError(err);
+  }
 }

@@ -2,6 +2,7 @@ import { lookup } from 'mime-types';
 import { createMimeMessage, Mailbox } from 'mimetext';
 import type { MailboxAddrObject } from 'mimetext';
 
+import { MIME_KIT_ERROR_CODES, MimeKitError } from './error.ts';
 import type { Address } from './parse.ts';
 
 export type AddressInput = string | Address;
@@ -62,93 +63,120 @@ function guessMime(filename: string): string {
 }
 
 export function build(input: BuildInput): string {
-  const msg = createMimeMessage();
-
-  msg.setSender(toMailbox(input.from));
-  const to = toArray(input.to);
-  if (to.length) {
-    msg.setTo(to.map(toMailbox));
+  if (!input.from || (typeof input.from === 'string' && !input.from.trim())) {
+    throw new MimeKitError(
+      MIME_KIT_ERROR_CODES.INVALID_INPUT,
+      'build() requires a non-empty "from" address'
+    );
   }
-  const cc = toArray(input.cc);
-  if (cc.length) {
-    msg.setCc(cc.map(toMailbox));
+  if (!input.text && !input.html) {
+    throw new MimeKitError(
+      MIME_KIT_ERROR_CODES.INVALID_INPUT,
+      'build() requires at least "text" or "html" content'
+    );
   }
-  const bcc = toArray(input.bcc);
-  if (bcc.length) {
-    msg.setBcc(bcc.map(toMailbox));
-  }
-
-  msg.setSubject(input.subject ?? '');
-  if (input.text) {
-    msg.addMessage({ contentType: 'text/plain', data: input.text });
-  }
-  if (input.html) {
-    msg.addMessage({ contentType: 'text/html', data: input.html });
-  }
-
   if (input.attachments) {
     for (const att of input.attachments) {
-      const contentType = att.type ?? guessMime(att.filename);
-      const data = encodeBase64(att.content);
-      const headers: Record<string, string> = {};
-      if (att.cid) {
-        headers['Content-ID'] = att.cid.startsWith('<')
-          ? att.cid
-          : `<${att.cid}>`;
+      if (!att.filename) {
+        throw new MimeKitError(
+          MIME_KIT_ERROR_CODES.INVALID_INPUT,
+          'Each attachment must have a non-empty "filename"'
+        );
       }
-      msg.addAttachment({
-        filename: att.filename,
-        contentType,
-        data,
-        encoding: 'base64',
-        inline: att.inline ?? false,
-        headers,
-      });
     }
   }
 
-  const replyTo = toArray(input.replyTo);
-  if (replyTo.length) {
-    const first = replyTo[0];
-    const mb =
-      typeof first === 'string'
-        ? new Mailbox(first, { type: 'To' })
-        : new Mailbox(
-            { addr: first.address, name: first.name },
-            { type: 'To' }
-          );
-    msg.setHeader('Reply-To', mb);
-  }
-  if (input.date !== undefined) {
-    const d = input.date instanceof Date ? input.date : new Date(input.date);
-    msg.setHeader('Date', d.toUTCString());
-  }
-  if (input.messageId) {
-    const id = input.messageId.startsWith('<')
-      ? input.messageId
-      : `<${input.messageId}>`;
-    msg.setHeader('Message-ID', id);
-  }
-  if (input.inReplyTo) {
-    const id = input.inReplyTo.startsWith('<')
-      ? input.inReplyTo
-      : `<${input.inReplyTo}>`;
-    msg.setHeader('In-Reply-To', id);
-  }
-  if (input.references) {
-    const refs = Array.isArray(input.references)
-      ? input.references
-      : [input.references];
-    const formatted = refs
-      .map((r) => (r.startsWith('<') ? r : `<${r}>`))
-      .join(' ');
-    msg.setHeader('References', formatted);
-  }
-  if (input.headers) {
-    for (const [key, value] of Object.entries(input.headers)) {
-      msg.setHeader(key, value);
-    }
-  }
+  try {
+    const msg = createMimeMessage();
 
-  return msg.asRaw();
+    msg.setSender(toMailbox(input.from));
+    const to = toArray(input.to);
+    if (to.length) {
+      msg.setTo(to.map(toMailbox));
+    }
+    const cc = toArray(input.cc);
+    if (cc.length) {
+      msg.setCc(cc.map(toMailbox));
+    }
+    const bcc = toArray(input.bcc);
+    if (bcc.length) {
+      msg.setBcc(bcc.map(toMailbox));
+    }
+
+    msg.setSubject(input.subject ?? '');
+    if (input.text) {
+      msg.addMessage({ contentType: 'text/plain', data: input.text });
+    }
+    if (input.html) {
+      msg.addMessage({ contentType: 'text/html', data: input.html });
+    }
+
+    if (input.attachments) {
+      for (const att of input.attachments) {
+        const contentType = att.type ?? guessMime(att.filename);
+        const data = encodeBase64(att.content);
+        const headers: Record<string, string> = {};
+        if (att.cid) {
+          headers['Content-ID'] = att.cid.startsWith('<')
+            ? att.cid
+            : `<${att.cid}>`;
+        }
+        msg.addAttachment({
+          filename: att.filename,
+          contentType,
+          data,
+          encoding: 'base64',
+          inline: att.inline ?? false,
+          headers,
+        });
+      }
+    }
+
+    const replyTo = toArray(input.replyTo);
+    if (replyTo.length) {
+      const first = replyTo[0];
+      const mb =
+        typeof first === 'string'
+          ? new Mailbox(first, { type: 'To' })
+          : new Mailbox(
+              { addr: first.address, name: first.name },
+              { type: 'To' }
+            );
+      msg.setHeader('Reply-To', mb);
+    }
+    if (input.date !== undefined) {
+      const d = input.date instanceof Date ? input.date : new Date(input.date);
+      msg.setHeader('Date', d.toUTCString());
+    }
+    if (input.messageId) {
+      const id = input.messageId.startsWith('<')
+        ? input.messageId
+        : `<${input.messageId}>`;
+      msg.setHeader('Message-ID', id);
+    }
+    if (input.inReplyTo) {
+      const id = input.inReplyTo.startsWith('<')
+        ? input.inReplyTo
+        : `<${input.inReplyTo}>`;
+      msg.setHeader('In-Reply-To', id);
+    }
+    if (input.references) {
+      const refs = Array.isArray(input.references)
+        ? input.references
+        : [input.references];
+      const formatted = refs
+        .map((r) => (r.startsWith('<') ? r : `<${r}>`))
+        .join(' ');
+      msg.setHeader('References', formatted);
+    }
+    if (input.headers) {
+      for (const [key, value] of Object.entries(input.headers)) {
+        msg.setHeader(key, value);
+      }
+    }
+
+    return msg.asRaw();
+  } catch (err) {
+    throw MimeKitError.fromBuildError(err);
+  }
 }
