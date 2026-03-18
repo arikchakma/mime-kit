@@ -1,16 +1,16 @@
 {
   "name": "mime-kit",
   "version": "0.0.0",
-  "description": "A starter for creating a TypeScript package.",
-  "homepage": "https://github.com/author/library#readme",
+  "description": "Unified MIME parse and build for JavaScript and TypeScript.",
+  "homepage": "https://github.com/arikchakma/mime-kit#readme",
   "bugs": {
-    "url": "https://github.com/author/library/issues"
+    "url": "https://github.com/arikchakma/mime-kit/issues"
   },
   "license": "MIT",
-  "author": "Author Name <author.name@mail.com>",
+  "author": "Arik Chakma",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/author/library.git"
+    "url": "git+https://github.com/arikchakma/mime-kit.git"
   },
   "files": [
     "dist"
