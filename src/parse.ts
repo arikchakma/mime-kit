@@ -126,7 +126,7 @@ export async function parse(
       replyTo: flattenAddresses(result.replyTo),
       subject: result.subject ?? '',
       messageId: result.messageId?.replace(/^<|>$/g, '') ?? undefined,
-      inReplyTo: result.inReplyTo ?? undefined,
+      inReplyTo: result.inReplyTo?.replace(/^<|>$/g, '') ?? undefined,
       references: parseReferences(result.references),
       date: parseDate(result.date),
       text: result.text ?? undefined,

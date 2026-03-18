@@ -1,5 +1,5 @@
 import { lookup } from 'mime-types';
-import { createMimeMessage, Mailbox } from 'mimetext';
+import { createMimeMessage } from 'mimetext';
 import type { MailboxAddrObject } from 'mimetext';
 
 import { MIME_KIT_ERROR_CODES, MimeKitError } from './error.ts';
@@ -17,6 +17,7 @@ export type AttachmentInput = {
 
 export type BuildInput = {
   from: AddressInput;
+  sender?: AddressInput;
   to?: AddressInput | AddressInput[];
   cc?: AddressInput | AddressInput[];
   bcc?: AddressInput | AddressInput[];
@@ -62,6 +63,35 @@ function guessMime(filename: string): string {
   return lookup(filename) || 'application/octet-stream';
 }
 
+type MimeMsg = ReturnType<typeof createMimeMessage>;
+
+function setRawHeader(msg: MimeMsg, name: string, value: string): void {
+  const headers = (
+    msg as unknown as {
+      headers: { fields: { name: string }[]; setCustom: Function };
+    }
+  ).headers;
+  const idx = headers.fields.findIndex((f) => f.name === name);
+  if (idx !== -1) {
+    headers.fields.splice(idx, 1);
+  }
+  headers.setCustom({
+    name,
+    value,
+    custom: true,
+    dump: (v: unknown) => (typeof v === 'string' ? v : ''),
+  });
+}
+
+function formatAddress(input: AddressInput): string {
+  if (typeof input === 'string') {
+    return `<${input}>`;
+  }
+  return input.name
+    ? `"${input.name}" <${input.address}>`
+    : `<${input.address}>`;
+}
+
 export function build(input: BuildInput): string {
   if (!input.from || (typeof input.from === 'string' && !input.from.trim())) {
     throw new MimeKitError(
@@ -90,6 +120,9 @@ export function build(input: BuildInput): string {
     const msg = createMimeMessage();
 
     msg.setSender(toMailbox(input.from));
+    if (input.sender) {
+      setRawHeader(msg, 'Sender', formatAddress(input.sender));
+    }
     const to = toArray(input.to);
     if (to.length) {
       msg.setTo(to.map(toMailbox));
@@ -134,15 +167,7 @@ export function build(input: BuildInput): string {
 
     const replyTo = toArray(input.replyTo);
     if (replyTo.length) {
-      const first = replyTo[0];
-      const mb =
-        typeof first === 'string'
-          ? new Mailbox(first, { type: 'To' })
-          : new Mailbox(
-              { addr: first.address, name: first.name },
-              { type: 'To' }
-            );
-      msg.setHeader('Reply-To', mb);
+      setRawHeader(msg, 'Reply-To', replyTo.map(formatAddress).join(', '));
     }
     if (input.date !== undefined) {
       const d = input.date instanceof Date ? input.date : new Date(input.date);
