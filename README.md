@@ -8,13 +8,13 @@
 **mime-kit** wraps [postal-mime](https://github.com/postalsys/postal-mime) (parser) and [MIMEText](https://github.com/muratgozel/MIMEText) (builder) behind a clean, symmetric API. Parse raw MIME into a typed `Email` object, or build raw MIME from a plain input object.
 
 ```ts
-import { parse, build } from 'mime-kit'
+import { parse, build } from 'mime-kit';
 
 // Parse raw MIME → Email
-const email = await parse(rawMime)
-console.log(email.from)    // { name: 'Alice', address: 'alice@example.com' }
-console.log(email.subject) // 'Hello'
-console.log(email.text)    // 'Hi Bob!'
+const email = await parse(rawMime);
+console.log(email.from); // { name: 'Alice', address: 'alice@example.com' }
+console.log(email.subject); // 'Hello'
+console.log(email.text); // 'Hi Bob!'
 
 // Build Email → raw MIME
 const raw = build({
@@ -22,7 +22,7 @@ const raw = build({
   to: 'bob@example.com',
   subject: 'Hello',
   text: 'Hi Bob!',
-})
+});
 ```
 
 > [!NOTE]
