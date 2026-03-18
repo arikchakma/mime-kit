@@ -1,3 +1,4 @@
+export { hasAttachments, inlineImages, totalSize } from './attachments.ts';
 export { MimeKitHeaders } from './headers.ts';
 export { MimeKitError } from './error.ts';
 export { parse } from './parse.ts';
