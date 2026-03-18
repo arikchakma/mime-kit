@@ -1,6 +1,6 @@
 type RawHeader = { key: string; value: string };
 
-export class Headers {
+export class MimeKitHeaders {
   readonly #map: Map<string, string[]>;
 
   constructor(raw: RawHeader[]) {
@@ -62,7 +62,7 @@ export class Headers {
     return this.entries();
   }
 
-  forEach(fn: (value: string, key: string, headers: Headers) => void): void {
+  forEach(fn: (value: string, key: string, headers: MimeKitHeaders) => void): void {
     for (const [key, value] of this) {
       fn(value, key, this);
     }

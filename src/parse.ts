@@ -2,7 +2,7 @@ import PostalMime from 'postal-mime';
 import type { Address as PostalMimeAddress } from 'postal-mime';
 
 import { MimeKitError } from './error.ts';
-import { Headers } from './headers.ts';
+import { MimeKitHeaders } from './headers.ts';
 
 export type Address = { name: string; address: string };
 
@@ -32,7 +32,7 @@ export type Email = {
   date: Date | undefined;
   text: string | undefined;
   html: string | undefined;
-  headers: Headers;
+  headers: MimeKitHeaders;
   attachments: ParsedAttachment[];
 };
 
@@ -131,7 +131,7 @@ export async function parse(
       date: parseDate(result.date),
       text: result.text ?? undefined,
       html: result.html ?? undefined,
-      headers: new Headers(result.headers),
+      headers: new MimeKitHeaders(result.headers),
       attachments,
     };
   } catch (err) {

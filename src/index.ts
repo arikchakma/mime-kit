@@ -1,4 +1,4 @@
-export { Headers } from './headers.ts';
+export { MimeKitHeaders } from './headers.ts';
 export { MimeKitError } from './error.ts';
 export { parse } from './parse.ts';
 export { build } from './build.ts';

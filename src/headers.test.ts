@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
 
-import { Headers } from './headers.ts';
+import { MimeKitHeaders } from './headers.ts';
 
-function make(pairs: [string, string][]): Headers {
-  return new Headers(pairs.map(([key, value]) => ({ key, value })));
+function make(pairs: [string, string][]): MimeKitHeaders {
+  return new MimeKitHeaders(pairs.map(([key, value]) => ({ key, value })));
 }
 
-describe('Headers', () => {
+describe('MimeKitHeaders', () => {
   it('get returns first value', () => {
     const h = make([
       ['subject', 'hello'],
