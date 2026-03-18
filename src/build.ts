@@ -1,11 +1,11 @@
 import { lookup } from 'mime-types';
 import { createMimeMessage } from 'mimetext';
-import type { MailboxAddrObject } from 'mimetext';
 
+import { formatAddress, toMailbox } from './address.ts';
+import type { AddressInput } from './address.ts';
+import { encodeBase64 } from './encoding.ts';
 import { MIME_KIT_ERROR_CODES, MimeKitError } from './error.ts';
-import type { Address } from './parse.ts';
-
-export type AddressInput = string | Address;
+import { toArray } from './utils/array.ts';
 
 export type AttachmentInput = {
   filename: string;
@@ -15,7 +15,6 @@ export type AttachmentInput = {
   contentId?: string;
   description?: string;
   method?: string;
-  related?: boolean;
 };
 
 export type BuildInput = {
@@ -36,63 +35,36 @@ export type BuildInput = {
   headers?: Record<string, string>;
 };
 
-function toMailbox(input: AddressInput): MailboxAddrObject {
-  if (typeof input === 'string') {
-    return { addr: input };
-  }
-  return { addr: input.address, name: input.name || undefined };
-}
-
-function toArray<T>(v: T | T[] | undefined): T[] {
-  if (v === undefined) {
-    return [];
-  }
-  return Array.isArray(v) ? v : [v];
-}
-
-function encodeBase64(input: Uint8Array | ArrayBuffer | string): string {
-  if (typeof input === 'string') {
-    return btoa(input);
-  }
-  const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
-  let binary = '';
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary);
-}
+type MimeMsg = ReturnType<typeof createMimeMessage>;
 
 function guessMime(filename: string): string {
   return lookup(filename) || 'application/octet-stream';
 }
 
-type MimeMsg = ReturnType<typeof createMimeMessage>;
-
 function setRawHeader(msg: MimeMsg, name: string, value: string): void {
-  const headers = (
-    msg as unknown as {
-      headers: { fields: { name: string }[]; setCustom: Function };
+  try {
+    const headers = (
+      msg as unknown as {
+        headers: { fields: { name: string }[]; setCustom: Function };
+      }
+    ).headers;
+    const idx = headers.fields.findIndex((f) => f.name === name);
+    if (idx !== -1) {
+      headers.fields.splice(idx, 1);
     }
-  ).headers;
-  const idx = headers.fields.findIndex((f) => f.name === name);
-  if (idx !== -1) {
-    headers.fields.splice(idx, 1);
+    headers.setCustom({
+      name,
+      value,
+      custom: true,
+      dump: (v: unknown) => (typeof v === 'string' ? v : ''),
+    });
+  } catch {
+    msg.setHeader(name, value);
   }
-  headers.setCustom({
-    name,
-    value,
-    custom: true,
-    dump: (v: unknown) => (typeof v === 'string' ? v : ''),
-  });
 }
 
-function formatAddress(input: AddressInput): string {
-  if (typeof input === 'string') {
-    return `<${input}>`;
-  }
-  return input.name
-    ? `"${input.name}" <${input.address}>`
-    : `<${input.address}>`;
+function wrapId(id: string): string {
+  return id.startsWith('<') ? id : `<${id}>`;
 }
 
 export function build(input: BuildInput): string {
@@ -156,9 +128,7 @@ export function build(input: BuildInput): string {
         const data = encodeBase64(att.content);
         const headers: Record<string, string> = {};
         if (att.contentId) {
-          headers['Content-ID'] = att.contentId.startsWith('<')
-            ? att.contentId
-            : `<${att.contentId}>`;
+          headers['Content-ID'] = wrapId(att.contentId);
         }
         if (att.description) {
           headers['Content-Description'] = att.description;
@@ -168,7 +138,7 @@ export function build(input: BuildInput): string {
           contentType,
           data,
           encoding: 'base64',
-          inline: att.inline ?? att.related ?? false,
+          inline: att.inline ?? false,
           headers,
         });
       }
@@ -183,25 +153,14 @@ export function build(input: BuildInput): string {
       msg.setHeader('Date', d.toUTCString());
     }
     if (input.messageId) {
-      const id = input.messageId.startsWith('<')
-        ? input.messageId
-        : `<${input.messageId}>`;
-      msg.setHeader('Message-ID', id);
+      msg.setHeader('Message-ID', wrapId(input.messageId));
     }
     if (input.inReplyTo) {
-      const id = input.inReplyTo.startsWith('<')
-        ? input.inReplyTo
-        : `<${input.inReplyTo}>`;
-      msg.setHeader('In-Reply-To', id);
+      msg.setHeader('In-Reply-To', wrapId(input.inReplyTo));
     }
     if (input.references) {
-      const refs = Array.isArray(input.references)
-        ? input.references
-        : [input.references];
-      const formatted = refs
-        .map((r) => (r.startsWith('<') ? r : `<${r}>`))
-        .join(' ');
-      msg.setHeader('References', formatted);
+      const refs = toArray(input.references);
+      msg.setHeader('References', refs.map(wrapId).join(' '));
     }
     if (input.headers) {
       for (const [key, value] of Object.entries(input.headers)) {

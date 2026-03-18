@@ -3,7 +3,10 @@ export { MimeKitError } from './error.ts';
 export { parse } from './parse.ts';
 export { build } from './build.ts';
 export { messageId } from './message-id.ts';
+export { extractDomain } from './address.ts';
+export { isReply, threadId } from './utils/thread.ts';
 
 export type { MimeKitErrorCode } from './error.ts';
+export type { AddressInput } from './address.ts';
 export type { Address, Email, ParsedAttachment } from './parse.ts';
-export type { AddressInput, AttachmentInput, BuildInput } from './build.ts';
+export type { AttachmentInput, BuildInput } from './build.ts';
