@@ -1,59 +1,15 @@
-const SKIP_TAGS = new Set(['style', 'script', 'head']);
-const BLOCK_TAGS = new Set([
-  'p',
-  'div',
-  'br',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'li',
-  'tr',
-  'blockquote',
-  'hr',
-  'pre',
-  'table',
-]);
+import { decodeEntity } from './entities.ts';
+import { STATE } from './state.ts';
+import type { State } from './state.ts';
+import { BLOCK_TAGS, SKIP_TAGS } from './tags.ts';
 
-const ENTITIES: Record<string, string> = {
-  amp: '&',
-  lt: '<',
-  gt: '>',
-  quot: '"',
-  apos: "'",
-  nbsp: ' ',
-};
-
-const enum State {
-  Text,
-  TagOpen,
-  TagName,
-  BeforeAttrName,
-  AttrName,
-  AfterAttrName,
-  BeforeAttrValue,
-  AttrValueDoubleQuoted,
-  AttrValueSingleQuoted,
-  AttrValueUnquoted,
-  SelfClosing,
-  CloseTagName,
-}
-
-function decodeEntity(entity: string): string {
-  if (entity.startsWith('#x') || entity.startsWith('#X')) {
-    return String.fromCharCode(Number.parseInt(entity.slice(2), 16));
-  }
-  if (entity.startsWith('#')) {
-    return String.fromCharCode(Number(entity.slice(1)));
-  }
-  return ENTITIES[entity] ?? `&${entity};`;
+function isWhitespace(ch: string): boolean {
+  return ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r';
 }
 
 export function textFromHtml(html: string): string {
   let out = '';
-  let state: State = State.Text;
+  let state: State = STATE.TEXT;
   let tagName = '';
   let isClose = false;
   let skipDepth = 0;
@@ -91,7 +47,6 @@ export function textFromHtml(html: string): string {
     }
 
     if (name === 'a' && attrs['href']) {
-      // Store href — we'll append it when we see </a>
       out += '\x01' + attrs['href'] + '\x02';
     }
   }
@@ -107,7 +62,7 @@ export function textFromHtml(html: string): string {
   for (let i = 0; i < html.length; i++) {
     const ch = html[i];
 
-    if (inEntity && state === State.Text) {
+    if (inEntity && state === STATE.TEXT) {
       if (ch === ';') {
         out += decodeEntity(entity);
         entity = '';
@@ -118,17 +73,15 @@ export function textFromHtml(html: string): string {
         entity += ch;
         continue;
       }
-      // Not a valid entity — flush as text
       out += '&' + entity;
       entity = '';
       inEntity = false;
-      // Fall through to process current char
     }
 
     switch (state) {
-      case State.Text:
+      case STATE.TEXT:
         if (ch === '<') {
-          state = State.TagOpen;
+          state = STATE.TAG_OPEN;
           tagName = '';
           isClose = false;
           attrs = {};
@@ -140,38 +93,36 @@ export function textFromHtml(html: string): string {
         }
         break;
 
-      case State.TagOpen:
+      case STATE.TAG_OPEN:
         if (ch === '/') {
           isClose = true;
-          state = State.CloseTagName;
+          state = STATE.CLOSE_TAG_NAME;
         } else if (ch === '!' || ch === '?') {
-          // Comment or doctype — skip to >
           const end = html.indexOf('>', i);
           i = end === -1 ? html.length - 1 : end;
-          state = State.Text;
+          state = STATE.TEXT;
         } else {
           tagName += ch;
-          state = State.TagName;
+          state = STATE.TAG_NAME;
         }
         break;
 
-      case State.TagName:
-        if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
-          state = State.BeforeAttrName;
+      case STATE.TAG_NAME:
+        if (isWhitespace(ch)) {
+          state = STATE.BEFORE_ATTR_NAME;
         } else if (ch === '/') {
-          state = State.SelfClosing;
+          state = STATE.SELF_CLOSING;
         } else if (ch === '>') {
           flushTag();
-          state = State.Text;
+          state = STATE.TEXT;
         } else {
           tagName += ch;
         }
         break;
 
-      case State.CloseTagName:
+      case STATE.CLOSE_TAG_NAME:
         if (ch === '>') {
           flushTag();
-          // Handle </a> — extract link text and href
           if (tagName.toLowerCase() === 'a' && skipDepth === 0) {
             const startMarker = out.lastIndexOf('\x01');
             if (startMarker !== -1) {
@@ -188,108 +139,108 @@ export function textFromHtml(html: string): string {
               }
             }
           }
-          state = State.Text;
+          state = STATE.TEXT;
         } else if (ch !== ' ') {
           tagName += ch;
         }
         break;
 
-      case State.BeforeAttrName:
+      case STATE.BEFORE_ATTR_NAME:
         if (ch === '>') {
           commitAttr();
           flushTag();
-          state = State.Text;
+          state = STATE.TEXT;
         } else if (ch === '/') {
           commitAttr();
-          state = State.SelfClosing;
-        } else if (ch !== ' ' && ch !== '\t' && ch !== '\n' && ch !== '\r') {
+          state = STATE.SELF_CLOSING;
+        } else if (!isWhitespace(ch)) {
           commitAttr();
           attrName = ch;
-          state = State.AttrName;
+          state = STATE.ATTR_NAME;
         }
         break;
 
-      case State.AttrName:
+      case STATE.ATTR_NAME:
         if (ch === '=') {
-          state = State.BeforeAttrValue;
-        } else if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
-          state = State.AfterAttrName;
+          state = STATE.BEFORE_ATTR_VALUE;
+        } else if (isWhitespace(ch)) {
+          state = STATE.AFTER_ATTR_NAME;
         } else if (ch === '>' || ch === '/') {
           commitAttr();
           if (ch === '>') {
             flushTag();
-            state = State.Text;
+            state = STATE.TEXT;
           } else {
-            state = State.SelfClosing;
+            state = STATE.SELF_CLOSING;
           }
         } else {
           attrName += ch;
         }
         break;
 
-      case State.AfterAttrName:
+      case STATE.AFTER_ATTR_NAME:
         if (ch === '=') {
-          state = State.BeforeAttrValue;
+          state = STATE.BEFORE_ATTR_VALUE;
         } else if (ch === '>') {
           commitAttr();
           flushTag();
-          state = State.Text;
+          state = STATE.TEXT;
         } else if (ch === '/') {
           commitAttr();
-          state = State.SelfClosing;
-        } else if (ch !== ' ' && ch !== '\t' && ch !== '\n' && ch !== '\r') {
+          state = STATE.SELF_CLOSING;
+        } else if (!isWhitespace(ch)) {
           commitAttr();
           attrName = ch;
-          state = State.AttrName;
+          state = STATE.ATTR_NAME;
         }
         break;
 
-      case State.BeforeAttrValue:
+      case STATE.BEFORE_ATTR_VALUE:
         if (ch === '"') {
-          state = State.AttrValueDoubleQuoted;
+          state = STATE.ATTR_VALUE_DOUBLE_QUOTED;
         } else if (ch === "'") {
-          state = State.AttrValueSingleQuoted;
-        } else if (ch !== ' ' && ch !== '\t' && ch !== '\n' && ch !== '\r') {
+          state = STATE.ATTR_VALUE_SINGLE_QUOTED;
+        } else if (!isWhitespace(ch)) {
           attrValue = ch;
-          state = State.AttrValueUnquoted;
+          state = STATE.ATTR_VALUE_UNQUOTED;
         }
         break;
 
-      case State.AttrValueDoubleQuoted:
+      case STATE.ATTR_VALUE_DOUBLE_QUOTED:
         if (ch === '"') {
           commitAttr();
-          state = State.BeforeAttrName;
+          state = STATE.BEFORE_ATTR_NAME;
         } else {
           attrValue += ch;
         }
         break;
 
-      case State.AttrValueSingleQuoted:
+      case STATE.ATTR_VALUE_SINGLE_QUOTED:
         if (ch === "'") {
           commitAttr();
-          state = State.BeforeAttrName;
+          state = STATE.BEFORE_ATTR_NAME;
         } else {
           attrValue += ch;
         }
         break;
 
-      case State.AttrValueUnquoted:
-        if (ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r') {
+      case STATE.ATTR_VALUE_UNQUOTED:
+        if (isWhitespace(ch)) {
           commitAttr();
-          state = State.BeforeAttrName;
+          state = STATE.BEFORE_ATTR_NAME;
         } else if (ch === '>') {
           commitAttr();
           flushTag();
-          state = State.Text;
+          state = STATE.TEXT;
         } else {
           attrValue += ch;
         }
         break;
 
-      case State.SelfClosing:
+      case STATE.SELF_CLOSING:
         if (ch === '>') {
           flushTag();
-          state = State.Text;
+          state = STATE.TEXT;
         }
         break;
     }

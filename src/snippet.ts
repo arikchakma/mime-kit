@@ -1,5 +1,5 @@
 import type { Email } from './parse.ts';
-import { textFromHtml } from './text-from-html.ts';
+import { textFromHtml } from './html/text-from-html.ts';
 
 export function snippet(email: Email, maxLength = 200): string {
   const raw = email.text ?? (email.html ? textFromHtml(email.html) : '');
