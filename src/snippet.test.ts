@@ -29,10 +29,8 @@ describe('snippet', () => {
     expect(snippet(stub({ text: 'Hello\n  world\n' }))).toBe('Hello world');
   });
 
-  it('falls back to html when text is missing', () => {
-    expect(snippet(stub({ html: '<p>Hello <b>world</b></p>' }))).toBe(
-      'Hello world'
-    );
+  it('returns empty string when only html is present', () => {
+    expect(snippet(stub({ html: '<p>Hello</p>' }))).toBe('');
   });
 
   it('returns empty string when no content', () => {
@@ -46,7 +44,7 @@ describe('snippet', () => {
     expect(result).toMatch(/\.\.\.$/);
   });
 
-  it('prefers text over html', () => {
+  it('uses text even when html is also present', () => {
     expect(snippet(stub({ text: 'plain', html: '<p>html</p>' }))).toBe(
       'plain'
     );

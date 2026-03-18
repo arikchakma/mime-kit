@@ -7,7 +7,6 @@ export { build } from './build.ts';
 export { messageId } from './message-id.ts';
 export { displayName, extractDomain, isSameAddress } from './address.ts';
 export { snippet } from './snippet.ts';
-export { textFromHtml } from './text-from-html.ts';
 export { validate } from './validate.ts';
 export { isReply, threadId } from './utils/thread.ts';
 
