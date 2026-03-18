@@ -207,4 +207,42 @@ describe('build', () => {
     });
     expect(raw).toContain('application/pdf');
   });
+
+  it('handles non-ASCII string attachment content', () => {
+    const raw = build({
+      from: 'a@b.com',
+      to: 'c@d.com',
+      text: 'see attached',
+      attachments: [
+        {
+          filename: 'note.txt',
+          content: 'Hello 你好 🌍',
+          type: 'text/plain',
+        },
+      ],
+    });
+    expect(raw).toContain('note.txt');
+  });
+
+  it('handles pre-bracketed addresses in replyTo', () => {
+    const raw = build({
+      from: 'a@b.com',
+      to: 'c@d.com',
+      replyTo: '<reply@b.com>',
+      text: 'hi',
+    });
+    expect(raw).toMatch(/Reply-To:.*<reply@b\.com>/);
+    expect(raw).not.toContain('<<');
+  });
+
+  it('handles pre-bracketed sender address', () => {
+    const raw = build({
+      from: 'a@b.com',
+      sender: '<agent@b.com>',
+      to: 'c@d.com',
+      text: 'hi',
+    });
+    expect(raw).toMatch(/Sender:.*<agent@b\.com>/);
+    expect(raw).not.toContain('<<');
+  });
 });
