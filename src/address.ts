@@ -23,6 +23,27 @@ export function formatAddress(input: AddressInput): string {
   return input.name ? `"${input.name}" <${addr}>` : `<${addr}>`;
 }
 
+export function displayName(input: AddressInput): string {
+  if (typeof input === 'string') {
+    const addr = stripBrackets(input);
+    const at = addr.indexOf('@');
+    return at === -1 ? addr : addr.slice(0, at);
+  }
+  if (input.name) {
+    return input.name;
+  }
+  const at = input.address.indexOf('@');
+  return at === -1 ? input.address : input.address.slice(0, at);
+}
+
+export function isSameAddress(a: AddressInput, b: AddressInput): boolean {
+  const addrA =
+    typeof a === 'string' ? stripBrackets(a) : stripBrackets(a.address);
+  const addrB =
+    typeof b === 'string' ? stripBrackets(b) : stripBrackets(b.address);
+  return addrA.toLowerCase() === addrB.toLowerCase();
+}
+
 export function extractDomain(email: string): string {
   const addr = stripBrackets(email);
   const at = addr.lastIndexOf('@');

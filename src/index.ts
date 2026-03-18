@@ -3,7 +3,7 @@ export { MimeKitError } from './error.ts';
 export { parse } from './parse.ts';
 export { build } from './build.ts';
 export { messageId } from './message-id.ts';
-export { extractDomain } from './address.ts';
+export { displayName, extractDomain, isSameAddress } from './address.ts';
 export { isReply, threadId } from './utils/thread.ts';
 
 export type { MimeKitErrorCode } from './error.ts';
