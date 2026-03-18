@@ -1,6 +1,20 @@
 import { describe, expect, it } from 'vite-plus/test';
 
 import { build } from './build.ts';
+import { messageId } from './message-id.ts';
+
+describe('messageId', () => {
+  it('generates id with the given domain', () => {
+    const id = messageId('example.com');
+    expect(id).toContain('@example.com');
+  });
+
+  it('generates unique ids', () => {
+    const a = messageId('example.com');
+    const b = messageId('example.com');
+    expect(a).not.toBe(b);
+  });
+});
 
 describe('build', () => {
   it('builds a plain text email from string addresses', () => {
@@ -70,7 +84,7 @@ describe('build', () => {
     expect(raw).toContain('Content-Disposition: attachment');
   });
 
-  it('adds inline attachments with cid', () => {
+  it('adds inline attachments with contentId', () => {
     const raw = build({
       from: 'a@b.com',
       to: 'c@d.com',
@@ -81,12 +95,31 @@ describe('build', () => {
           content: new Uint8Array([137, 80, 78, 71]),
           type: 'image/png',
           inline: true,
-          cid: 'logo123',
+          contentId: 'logo123',
         },
       ],
     });
     expect(raw).toContain('Content-Disposition: inline');
     expect(raw).toContain('Content-ID: <logo123>');
+  });
+
+  it('sets attachment description and method', () => {
+    const raw = build({
+      from: 'a@b.com',
+      to: 'c@d.com',
+      text: 'see invite',
+      attachments: [
+        {
+          filename: 'invite.ics',
+          content: new TextEncoder().encode('BEGIN:VCALENDAR'),
+          type: 'text/calendar',
+          method: 'REQUEST',
+          description: 'Meeting invite',
+        },
+      ],
+    });
+    expect(raw).toContain('Content-Description: Meeting invite');
+    expect(raw).toContain('method=REQUEST');
   });
 
   it('sets custom headers', () => {
