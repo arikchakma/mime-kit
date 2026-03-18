@@ -4,6 +4,7 @@ export { parse } from './parse.ts';
 export { build } from './build.ts';
 export { messageId } from './message-id.ts';
 export { displayName, extractDomain, isSameAddress } from './address.ts';
+export { textFromHtml } from './text-from-html.ts';
 export { isReply, threadId } from './utils/thread.ts';
 
 export type { MimeKitErrorCode } from './error.ts';
