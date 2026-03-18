@@ -235,6 +235,73 @@ describe('build', () => {
     expect(raw).not.toContain('<<');
   });
 
+  it('sets high priority headers', () => {
+    const raw = build({
+      from: 'a@b.com',
+      to: 'c@d.com',
+      text: 'urgent',
+      priority: 'high',
+    });
+    expect(raw).toContain('X-Priority: 1');
+    expect(raw).toContain('Importance: high');
+  });
+
+  it('sets low priority headers', () => {
+    const raw = build({
+      from: 'a@b.com',
+      to: 'c@d.com',
+      text: 'fyi',
+      priority: 'low',
+    });
+    expect(raw).toContain('X-Priority: 5');
+    expect(raw).toContain('Importance: low');
+  });
+
+  it('omits priority headers for normal', () => {
+    const raw = build({
+      from: 'a@b.com',
+      to: 'c@d.com',
+      text: 'hi',
+      priority: 'normal',
+    });
+    expect(raw).not.toContain('X-Priority');
+    expect(raw).not.toContain('Importance');
+  });
+
+  it('sets list-unsubscribe header', () => {
+    const raw = build({
+      from: 'a@b.com',
+      to: 'c@d.com',
+      text: 'newsletter',
+      listUnsubscribe: 'https://example.com/unsub',
+    });
+    expect(raw).toContain('List-Unsubscribe: <https://example.com/unsub>');
+  });
+
+  it('sets multiple list-unsubscribe URLs', () => {
+    const raw = build({
+      from: 'a@b.com',
+      to: 'c@d.com',
+      text: 'newsletter',
+      listUnsubscribe: [
+        'https://example.com/unsub',
+        'mailto:unsub@example.com',
+      ],
+    });
+    expect(raw).toContain('<https://example.com/unsub>');
+    expect(raw).toContain('<mailto:unsub@example.com>');
+  });
+
+  it('sets auto-submitted header', () => {
+    const raw = build({
+      from: 'a@b.com',
+      to: 'c@d.com',
+      text: 'auto reply',
+      autoSubmitted: 'auto-replied',
+    });
+    expect(raw).toContain('Auto-Submitted: auto-replied');
+  });
+
   it('handles pre-bracketed sender address', () => {
     const raw = build({
       from: 'a@b.com',

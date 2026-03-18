@@ -32,6 +32,9 @@ export type BuildInput = {
   inReplyTo?: string;
   references?: string | string[];
   attachments?: AttachmentInput[];
+  priority?: 'high' | 'normal' | 'low';
+  listUnsubscribe?: string | string[];
+  autoSubmitted?: 'auto-generated' | 'auto-replied' | 'auto-notified';
   headers?: Record<string, string>;
 };
 
@@ -161,6 +164,25 @@ export function build(input: BuildInput): string {
     if (input.references) {
       const refs = toArray(input.references);
       msg.setHeader('References', refs.map(wrapId).join(' '));
+    }
+    if (input.priority && input.priority !== 'normal') {
+      if (input.priority === 'high') {
+        msg.setHeader('X-Priority', '1');
+        msg.setHeader('Importance', 'high');
+      } else {
+        msg.setHeader('X-Priority', '5');
+        msg.setHeader('Importance', 'low');
+      }
+    }
+    if (input.listUnsubscribe) {
+      const urls = toArray(input.listUnsubscribe);
+      msg.setHeader(
+        'List-Unsubscribe',
+        urls.map((u) => (u.startsWith('<') ? u : `<${u}>`)).join(', ')
+      );
+    }
+    if (input.autoSubmitted) {
+      msg.setHeader('Auto-Submitted', input.autoSubmitted);
     }
     if (input.headers) {
       for (const [key, value] of Object.entries(input.headers)) {
