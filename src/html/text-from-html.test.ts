@@ -42,9 +42,7 @@ describe('textFromHtml', () => {
   });
 
   it('decodes common HTML entities', () => {
-    expect(textFromHtml('&amp; &lt; &gt; &quot; a&nbsp;b')).toBe(
-      '& < > " a b'
-    );
+    expect(textFromHtml('&amp; &lt; &gt; &quot; a&nbsp;b')).toBe('& < > " a b');
   });
 
   it('decodes numeric entities', () => {
@@ -78,9 +76,9 @@ describe('textFromHtml', () => {
   });
 
   it('handles attributes on various tags', () => {
-    expect(
-      textFromHtml('<div class="main" id="content">hello</div>')
-    ).toBe('hello');
+    expect(textFromHtml('<div class="main" id="content">hello</div>')).toBe(
+      'hello'
+    );
   });
 
   it('handles links with nested tags in text', () => {

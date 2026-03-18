@@ -30,9 +30,7 @@ describe('reply', () => {
 
   it('sets to from original.from', () => {
     const result = reply(stub(), { from: me, text: 'Thanks' });
-    expect(
-      isSameAddress(result.to as string, 'alice@example.com')
-    ).toBe(true);
+    expect(isSameAddress(result.to as string, 'alice@example.com')).toBe(true);
   });
 
   it('uses replyTo when set', () => {
@@ -40,9 +38,7 @@ describe('reply', () => {
       replyTo: [{ name: '', address: 'reply@example.com' }],
     });
     const result = reply(original, { from: me, text: 'Thanks' });
-    expect(
-      isSameAddress(result.to as string, 'reply@example.com')
-    ).toBe(true);
+    expect(isSameAddress(result.to as string, 'reply@example.com')).toBe(true);
   });
 
   it('prefixes subject with Re:', () => {
@@ -84,9 +80,7 @@ describe('reply', () => {
       cc: [{ name: 'Dave', address: 'dave@example.com' }],
     });
     const result = reply(original, { from: me, text: 'ok', all: true });
-    const ccAddrs = (result.cc as { address: string }[])!.map(
-      (a) => a.address
-    );
+    const ccAddrs = (result.cc as { address: string }[])!.map((a) => a.address);
     expect(ccAddrs).toContain('carol@example.com');
     expect(ccAddrs).toContain('dave@example.com');
     expect(ccAddrs).not.toContain('bob@example.com');

@@ -47,9 +47,7 @@ describe('snippet', () => {
   });
 
   it('prefers text over html', () => {
-    expect(snippet(stub({ text: 'plain', html: '<p>html</p>' }))).toBe(
-      'plain'
-    );
+    expect(snippet(stub({ text: 'plain', html: '<p>html</p>' }))).toBe('plain');
   });
 
   it('respects custom maxLength', () => {

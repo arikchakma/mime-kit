@@ -62,7 +62,9 @@ export class MimeKitHeaders {
     return this.entries();
   }
 
-  forEach(fn: (value: string, key: string, headers: MimeKitHeaders) => void): void {
+  forEach(
+    fn: (value: string, key: string, headers: MimeKitHeaders) => void
+  ): void {
     for (const [key, value] of this) {
       fn(value, key, this);
     }

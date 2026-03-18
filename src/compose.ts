@@ -1,9 +1,9 @@
 import { isSameAddress } from './address.ts';
 import type { AddressInput } from './address.ts';
+import { extractDomain } from './address.ts';
 import type { AttachmentInput, BuildInput } from './build.ts';
 import { messageId } from './message-id.ts';
 import type { Email } from './parse.ts';
-import { extractDomain } from './address.ts';
 
 export type ReplyInput = {
   from: AddressInput;
@@ -30,19 +30,15 @@ function senderDomain(from: AddressInput): string {
   return extractDomain(addr) || 'localhost';
 }
 
-function dedup(
-  addrs: AddressInput[],
-  exclude: AddressInput[]
-): AddressInput[] {
-  return addrs.filter(
-    (a) => !exclude.some((ex) => isSameAddress(a, ex))
-  );
+function dedup(addrs: AddressInput[], exclude: AddressInput[]): AddressInput[] {
+  return addrs.filter((a) => !exclude.some((ex) => isSameAddress(a, ex)));
 }
 
 export function reply(original: Email, input: ReplyInput): BuildInput {
-  const to = original.replyTo.length > 0
-    ? original.replyTo[0]
-    : original.from ?? input.from;
+  const to =
+    original.replyTo.length > 0
+      ? original.replyTo[0]
+      : (original.from ?? input.from);
 
   const refs = original.messageId
     ? [...original.references, original.messageId]
