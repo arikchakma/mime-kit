@@ -12,7 +12,10 @@ export type AttachmentInput = {
   content: Uint8Array | ArrayBuffer | string;
   type?: string;
   inline?: boolean;
-  cid?: string;
+  contentId?: string;
+  description?: string;
+  method?: string;
+  related?: boolean;
 };
 
 export type BuildInput = {
@@ -146,20 +149,26 @@ export function build(input: BuildInput): string {
 
     if (input.attachments) {
       for (const att of input.attachments) {
-        const contentType = att.type ?? guessMime(att.filename);
+        let contentType = att.type ?? guessMime(att.filename);
+        if (att.method) {
+          contentType += `; method=${att.method}`;
+        }
         const data = encodeBase64(att.content);
         const headers: Record<string, string> = {};
-        if (att.cid) {
-          headers['Content-ID'] = att.cid.startsWith('<')
-            ? att.cid
-            : `<${att.cid}>`;
+        if (att.contentId) {
+          headers['Content-ID'] = att.contentId.startsWith('<')
+            ? att.contentId
+            : `<${att.contentId}>`;
+        }
+        if (att.description) {
+          headers['Content-Description'] = att.description;
         }
         msg.addAttachment({
           filename: att.filename,
           contentType,
           data,
           encoding: 'base64',
-          inline: att.inline ?? false,
+          inline: att.inline ?? att.related ?? false,
           headers,
         });
       }
