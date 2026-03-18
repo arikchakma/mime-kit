@@ -108,7 +108,7 @@ describe('parse', () => {
       'root@example.com',
       'parent@example.com',
     ]);
-    expect(email.inReplyTo).toBe('<parent@example.com>');
+    expect(email.inReplyTo).toBe('parent@example.com');
   });
 
   it('parses attachments with .text()', async () => {

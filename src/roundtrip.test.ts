@@ -81,7 +81,7 @@ describe('roundtrip: build → parse', () => {
 
     const email = await parse(raw);
     expect(email.messageId).toBe('reply-1@example.com');
-    expect(email.inReplyTo).toBe('<original@example.com>');
+    expect(email.inReplyTo).toBe('original@example.com');
     expect(email.references).toContain('root@example.com');
     expect(email.references).toContain('original@example.com');
   });

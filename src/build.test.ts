@@ -111,6 +111,30 @@ describe('build', () => {
     expect(raw).toContain('reply@b.com');
   });
 
+  it('sets multiple reply-to addresses', () => {
+    const raw = build({
+      from: 'a@b.com',
+      to: 'c@d.com',
+      replyTo: ['one@b.com', 'two@b.com'],
+      text: 'hi',
+    });
+    expect(raw).toContain('one@b.com');
+    expect(raw).toContain('two@b.com');
+  });
+
+  it('sets sender distinct from from', () => {
+    const raw = build({
+      from: 'author@b.com',
+      sender: 'agent@b.com',
+      to: 'c@d.com',
+      text: 'hi',
+    });
+    expect(raw).toContain('From:');
+    expect(raw).toContain('author@b.com');
+    expect(raw).toContain('Sender:');
+    expect(raw).toContain('agent@b.com');
+  });
+
   it('sets date', () => {
     const raw = build({
       from: 'a@b.com',
