@@ -1,7 +1,8 @@
 import type { Email } from './parse.ts';
+import { textFromHtml } from './text-from-html.ts';
 
 export function snippet(email: Email, maxLength = 200): string {
-  const raw = email.text ?? '';
+  const raw = email.text ?? (email.html ? textFromHtml(email.html) : '');
   const collapsed = raw.replace(/\s+/g, ' ').trim();
   if (collapsed.length <= maxLength) {
     return collapsed;
