@@ -17,7 +17,6 @@ export function validate(input: BuildInput): ValidationError[] {
       message: '"from" address is required',
     });
   }
-
   if (!input.text && !input.html) {
     errors.push({
       field: 'text',
@@ -25,7 +24,6 @@ export function validate(input: BuildInput): ValidationError[] {
       message: 'At least "text" or "html" content is required',
     });
   }
-
   const to = toArray(input.to);
   const cc = toArray(input.cc);
   const bcc = toArray(input.bcc);
@@ -36,7 +34,6 @@ export function validate(input: BuildInput): ValidationError[] {
       message: 'At least one recipient (to, cc, or bcc) is required',
     });
   }
-
   if (input.attachments) {
     for (let i = 0; i < input.attachments.length; i++) {
       if (!input.attachments[i].filename) {
