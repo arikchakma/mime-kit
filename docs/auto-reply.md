@@ -14,12 +14,12 @@ isAutoReply(email: Email): boolean
 
 Checks four header signals that indicate the message was machine-generated:
 
-| Header | Condition | Set by |
-|---|---|---|
-| `Auto-Submitted` | Present and not `"no"` (RFC 3834) | Standards-compliant servers |
-| `X-Auto-Response-Suppress` | Present (any value) | Microsoft Exchange / Outlook |
-| `Precedence` | `"auto_reply"` or `"bulk"` | Legacy systems, mailing lists |
-| `X-Autoreply` / `X-Autorespond` | Present (any value) | Various mail servers |
+| Header                          | Condition                         | Set by                        |
+| ------------------------------- | --------------------------------- | ----------------------------- |
+| `Auto-Submitted`                | Present and not `"no"` (RFC 3834) | Standards-compliant servers   |
+| `X-Auto-Response-Suppress`      | Present (any value)               | Microsoft Exchange / Outlook  |
+| `Precedence`                    | `"auto_reply"` or `"bulk"`        | Legacy systems, mailing lists |
+| `X-Autoreply` / `X-Autorespond` | Present (any value)               | Various mail servers          |
 
 Any one match returns `true`.
 
@@ -51,7 +51,7 @@ function processInbound(rawMime: string) {
     to: email.from?.address ?? '',
     subject: `Re: ${email.subject}`,
     text: 'We received your message and will respond within 24 hours.',
-    autoSubmitted: 'auto-replied',  // Mark our own reply so others can detect it
+    autoSubmitted: 'auto-replied', // Mark our own reply so others can detect it
   });
 
   sendEmail(ack);
@@ -82,6 +82,6 @@ function shouldNotify(rawMime: string): boolean {
 const email = parse(rawMime);
 
 if (isAutoReply(email)) {
-  label = 'auto-reply';    // Gray it out, lower priority
+  label = 'auto-reply'; // Gray it out, lower priority
 }
 ```

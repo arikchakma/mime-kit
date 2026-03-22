@@ -25,6 +25,7 @@ Any one of these is enough to return `true`.
 **Cleaning up an inbox view.** Bounces aren't real conversations. In a mail client, you might hide them from the main inbox and surface them in a dedicated "Delivery issues" section.
 
 **Email sending infrastructure.** If you run a transactional email service (password resets, invoices, notifications), you need to process bounces to:
+
 - Remove invalid addresses from your sending list
 - Track your bounce rate (ISPs will throttle you above ~2%)
 - Distinguish hard bounces (address doesn't exist) from soft bounces (mailbox full)
@@ -40,8 +41,8 @@ import { parse, isBounce } from 'mime-kit';
 
 const emails = rawMimeMessages.map(parse);
 
-const inbox = emails.filter(e => !isBounce(e));
-const bounces = emails.filter(e => isBounce(e));
+const inbox = emails.filter((e) => !isBounce(e));
+const bounces = emails.filter((e) => isBounce(e));
 
 console.log(`${bounces.length} delivery failures`);
 ```

@@ -99,7 +99,9 @@ const largest = threads.reduce((max, t) =>
   threadSize(t) > threadSize(max) ? t : max
 );
 
-console.log(`Largest thread: "${largest.email.subject}" with ${threadSize(largest)} messages`);
+console.log(
+  `Largest thread: "${largest.email.subject}" with ${threadSize(largest)} messages`
+);
 ```
 
 ### Handling missing parents gracefully

@@ -17,14 +17,14 @@ Returns an approximate byte count of what `build(input)` would produce.
 
 Calculates the expected wire size of an email without actually encoding it. The estimate accounts for:
 
-| Component | Calculation |
-|---|---|
-| Headers (MIME boundaries, Content-Type, etc.) | Fixed 500 bytes |
-| Text body | UTF-8 byte length |
-| HTML body | UTF-8 byte length |
-| Each attachment | `rawBytes * 4/3` (base64 expansion) + 200 bytes per attachment header |
-| Address fields (from, to, cc, bcc, replyTo) | Sum of name + address lengths |
-| Subject | String length |
+| Component                                     | Calculation                                                           |
+| --------------------------------------------- | --------------------------------------------------------------------- |
+| Headers (MIME boundaries, Content-Type, etc.) | Fixed 500 bytes                                                       |
+| Text body                                     | UTF-8 byte length                                                     |
+| HTML body                                     | UTF-8 byte length                                                     |
+| Each attachment                               | `rawBytes * 4/3` (base64 expansion) + 200 bytes per attachment header |
+| Address fields (from, to, cc, bcc, replyTo)   | Sum of name + address lengths                                         |
+| Subject                                       | String length                                                         |
 
 The 4/3 ratio comes from base64 encoding: every 3 bytes of binary data become 4 ASCII characters. The fixed overheads (500 for headers, 200 per attachment) cover MIME boundary markers, Content-Type/Content-Disposition headers, and line folding.
 
@@ -69,9 +69,8 @@ function updateSizeIndicator(draft: BuildInput) {
   const bytes = estimateSize(draft);
   const mb = bytes / (1024 * 1024);
 
-  sizeLabel.textContent = mb < 1
-    ? `${(bytes / 1024).toFixed(0)} KB`
-    : `${mb.toFixed(1)} MB`;
+  sizeLabel.textContent =
+    mb < 1 ? `${(bytes / 1024).toFixed(0)} KB` : `${mb.toFixed(1)} MB`;
 
   sizeLabel.classList.toggle('warning', mb > 20);
   sizeLabel.classList.toggle('error', mb > 25);
@@ -89,13 +88,18 @@ function onAttach(file: File, draft: BuildInput) {
     ...draft,
     attachments: [
       ...(draft.attachments ?? []),
-      { filename: file.name, content: new Uint8Array(await file.arrayBuffer()) },
+      {
+        filename: file.name,
+        content: new Uint8Array(await file.arrayBuffer()),
+      },
     ],
   };
 
   const size = estimateSize(withAttachment);
   if (size > MAX_SIZE) {
-    alert(`Adding "${file.name}" would make the message ${(size / 1024 / 1024).toFixed(1)} MB. Limit is 25 MB.`);
+    alert(
+      `Adding "${file.name}" would make the message ${(size / 1024 / 1024).toFixed(1)} MB. Limit is 25 MB.`
+    );
     return;
   }
 

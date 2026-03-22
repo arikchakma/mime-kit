@@ -1,20 +1,17 @@
 <div align="center">
   <h2>📨 mime-kit</h2>
-  <p>Unified MIME parse and build for JavaScript and TypeScript. Two functions, shared vocabulary.</p>
+  <p>Parse, build, and work with email.</p>
 </div>
 
 ### What Does It Do?
 
-**mime-kit** wraps [postal-mime](https://github.com/postalsys/postal-mime) (parser) and [MIMEText](https://github.com/muratgozel/MIMEText) (builder) behind a clean, symmetric API. Parse raw MIME into a typed `Email` object, or build raw MIME from a plain input object.
+**mime-kit** gives you everything you need to work with email programmatically — parse raw MIME, build new messages, compose replies, detect bounces, thread conversations, and more.
 
 ```ts
-import { parse, build } from 'mime-kit';
+import { parse, build, reply, groupByThread } from 'mime-kit';
 
 // Parse raw MIME → Email
 const email = await parse(rawMime);
-console.log(email.from); // { name: 'Alice', address: 'alice@example.com' }
-console.log(email.subject); // 'Hello'
-console.log(email.text); // 'Hi Bob!'
 
 // Build Email → raw MIME
 const raw = build({
@@ -23,10 +20,13 @@ const raw = build({
   subject: 'Hello',
   text: 'Hi Bob!',
 });
-```
 
-> [!NOTE]
-> Addresses are always normalized — groups are flattened, array fields are never undefined, and `from`/`sender` are always `Address | undefined`.
+// Compose a reply
+const replyRaw = reply(email, { from: 'bob@example.com', text: 'Hey Alice!' });
+
+// Thread a mailbox
+const threads = groupByThread(emails);
+```
 
 ### Acknowledgements
 

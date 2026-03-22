@@ -15,10 +15,10 @@ parseListHeaders(email: Email): ListHeaders
 
 ```ts
 type ListHeaders = {
-  listId: string | undefined;       // e.g. "dev.reactjs.org"
-  unsubscribe: string[];            // e.g. ["mailto:unsub@list.org", "https://list.org/unsub"]
-  post: string | undefined;         // e.g. "mailto:dev@reactjs.org"
-  archive: string | undefined;      // e.g. "https://list.org/archive"
+  listId: string | undefined; // e.g. "dev.reactjs.org"
+  unsubscribe: string[]; // e.g. ["mailto:unsub@list.org", "https://list.org/unsub"]
+  post: string | undefined; // e.g. "mailto:dev@reactjs.org"
+  archive: string | undefined; // e.g. "https://list.org/archive"
 };
 ```
 
@@ -58,13 +58,13 @@ if (list.listId) {
 const { unsubscribe } = parseListHeaders(email);
 
 // Prefer the HTTPS link over mailto for one-click unsubscribe
-const httpLink = unsubscribe.find(url => url.startsWith('https://'));
-const mailtoLink = unsubscribe.find(url => url.startsWith('mailto:'));
+const httpLink = unsubscribe.find((url) => url.startsWith('https://'));
+const mailtoLink = unsubscribe.find((url) => url.startsWith('mailto:'));
 
 if (httpLink) {
-  showUnsubscribeButton(httpLink);  // One-click web unsubscribe
+  showUnsubscribeButton(httpLink); // One-click web unsubscribe
 } else if (mailtoLink) {
-  showUnsubscribeButton(mailtoLink);  // Opens email compose
+  showUnsubscribeButton(mailtoLink); // Opens email compose
 }
 ```
 

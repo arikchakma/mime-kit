@@ -11,6 +11,7 @@ quote(email: Email, maxLines?: number): string
 ```
 
 **Parameters:**
+
 - `email` — A parsed `Email` object. Uses `email.text` if available, falls back to converting `email.html` via `textFromHtml()`.
 - `maxLines` — Optional. Truncate the quoted output to this many lines.
 
@@ -49,7 +50,13 @@ const quoted = quote(email, 5);
 ### Building a full reply body
 
 ```ts
-import { parse, reply, quote, stripSignature, stripQuotedReply } from 'mime-kit';
+import {
+  parse,
+  reply,
+  quote,
+  stripSignature,
+  stripQuotedReply,
+} from 'mime-kit';
 
 const original = parse(rawMime);
 const headers = reply(original, { from: 'me@company.com' });
@@ -76,8 +83,8 @@ Sounds good, I'll handle it.
 // If the email only has HTML content (no plain text part),
 // quote() automatically converts it to text first
 const htmlOnly = parse(htmlOnlyMime);
-console.log(htmlOnly.text);  // undefined
-console.log(htmlOnly.html);  // "<p>Meeting moved to 3pm</p>"
+console.log(htmlOnly.text); // undefined
+console.log(htmlOnly.html); // "<p>Meeting moved to 3pm</p>"
 
 quote(htmlOnly);
 // "> Meeting moved to 3pm"

@@ -46,13 +46,13 @@ if (receiptTo) {
 
 ```ts
 // Angle bracket format: "Bob Jones" <bob@company.com>
-readReceipt(email);  // "bob@company.com"
+readReceipt(email); // "bob@company.com"
 
 // Bare address format: bob@company.com
-readReceipt(email);  // "bob@company.com"
+readReceipt(email); // "bob@company.com"
 
 // No header present
-readReceipt(email);  // undefined
+readReceipt(email); // undefined
 ```
 
 ### Building a read receipt response

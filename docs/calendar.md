@@ -22,13 +22,13 @@ calendarMethod(email: Email): string | undefined
 
 Common methods and what they mean:
 
-| Method | Meaning |
-|---|---|
-| `REQUEST` | New invite or updated invite — "please attend this event" |
-| `REPLY` | Attendee responding to an invite (accept/decline/tentative) |
-| `CANCEL` | Organizer cancelled the event |
-| `COUNTER` | Attendee proposing a different time |
-| `PUBLISH` | Event published for information only (no RSVP expected) |
+| Method    | Meaning                                                     |
+| --------- | ----------------------------------------------------------- |
+| `REQUEST` | New invite or updated invite — "please attend this event"   |
+| `REPLY`   | Attendee responding to an invite (accept/decline/tentative) |
+| `CANCEL`  | Organizer cancelled the event                               |
+| `COUNTER` | Attendee proposing a different time                         |
+| `PUBLISH` | Event published for information only (no RSVP expected)     |
 
 ## When to use this
 
@@ -52,13 +52,13 @@ if (isCalendarInvite(email)) {
 
   switch (method) {
     case 'REQUEST':
-      showInviteCard(email);       // "Meeting: Q1 Planning — Accept / Decline / Tentative"
+      showInviteCard(email); // "Meeting: Q1 Planning — Accept / Decline / Tentative"
       break;
     case 'CANCEL':
       showCancellationNotice(email); // "Meeting cancelled: Q1 Planning"
       break;
     case 'REPLY':
-      updateAttendeeStatus(email);   // "Bob accepted: Q1 Planning"
+      updateAttendeeStatus(email); // "Bob accepted: Q1 Planning"
       break;
     default:
       showGenericCalendarView(email);
@@ -77,16 +77,16 @@ const email = parse(rawMime);
 
 if (isCalendarInvite(email)) {
   const icsAttachment = email.attachments.find(
-    a => a.mimeType === 'text/calendar' || a.mimeType === 'application/ics'
+    (a) => a.mimeType === 'text/calendar' || a.mimeType === 'application/ics'
   );
 
   // Get the raw iCalendar text for parsing with a dedicated library (e.g., ical.js)
   const icsText = icsAttachment.text();
   const event = icalParser.parse(icsText);
 
-  console.log(event.summary);   // "Q1 Planning"
-  console.log(event.dtstart);   // 2025-02-01T10:00:00Z
-  console.log(event.location);  // "Room 4A / Zoom"
+  console.log(event.summary); // "Q1 Planning"
+  console.log(event.dtstart); // 2025-02-01T10:00:00Z
+  console.log(event.location); // "Room 4A / Zoom"
 }
 ```
 
