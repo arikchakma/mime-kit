@@ -5,6 +5,12 @@ export default defineConfig({
     '*': 'vp check --fix',
   },
   pack: {
+    entry: ['src/index.ts'],
+    outDir: 'dist',
+    format: ['esm', 'cjs'],
+    target: 'es2022',
+    treeshake: true,
+    sourcemap: true,
     dts: {
       tsgo: true,
     },

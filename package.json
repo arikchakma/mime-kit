@@ -1,7 +1,7 @@
 {
   "name": "mime-kit",
-  "version": "0.0.0",
-  "description": "Unified MIME parse and build for JavaScript and TypeScript.",
+  "version": "0.0.1",
+  "description": "Parse, build, and work with email.",
   "homepage": "https://github.com/arikchakma/mime-kit#readme",
   "bugs": {
     "url": "https://github.com/arikchakma/mime-kit/issues"
@@ -16,8 +16,14 @@
     "dist"
   ],
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
   "exports": {
-    ".": "./dist/index.mjs",
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -29,6 +35,7 @@
     "dev": "vp pack --watch",
     "prepare": "vp config",
     "prepublishOnly": "vp run build",
+    "release": "bumpp",
     "test": "vp test"
   },
   "dependencies": {
